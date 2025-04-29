@@ -8,8 +8,11 @@ class ProductManager {
 
     async init() {
         try {
-            await fs.writeFile(this.path, JSON.stringify([]));
+            // Verificar si el archivo existe
+            await fs.access(this.path);
         } catch (error) {
+            // Si no existe, crear archivo con array vacío
+            await fs.writeFile(this.path, JSON.stringify([]));
             console.log('Initialized products.json');
         }
     }
@@ -40,6 +43,7 @@ class ProductManager {
     async updateProduct(id, updates) {
         const products = await this.getProducts();
         const index = products.findIndex(p => p.id === id);
+        if (index === -1) throw new Error('Producto no encontrado');
         products[index] = { ...products[index], ...updates, id };
         await fs.writeFile(this.path, JSON.stringify(products, null, 2));
         return products[index];

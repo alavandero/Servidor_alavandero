@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos en Tiempo Real</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 10px; border-bottom: 1px solid #ddd; }
+    form { margin-top: 20px; }
+    input, select { margin: 5px; padding: 5px; }
+    button { padding: 5px 10px; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Productos en Tiempo Real</h1>
+  <ul id="productsList">
+    {{#each products}}
+      <li data-id="{{this.id}}">{{this.title}} - ${{this.price}} <button onclick="deleteProduct({{this.id}})">Eliminar</button></li>
+    {{/each}}
+  </ul>
+
+  <form id="addProductForm">
+    <input type="text" id="title" placeholder="Nombre del producto" required>
+    <input type="number" id="price" placeholder="Precio" required>
+    <input type="text" id="description" placeholder="Descripción" required>
+    <input type="text" id="code" placeholder="Código" required>
+    <input type="number" id="stock" placeholder="Stock" required>
+    <input type="text" id="category" placeholder="Categoría" required>
+    <select id="status" required>
+      <option value="true">Activo</option>
+      <option value="false">Inactivo</option>
+    </select>
+    <button type="submit">Agregar Producto</button>
+  </form>
+  <p id="error" class="error"></p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Actualizar lista de productos
+    socket.on('updateProducts', (products) => {
+      const productsList = document.getElementById('productsList');
+      productsList.innerHTML = products.map(product => `
+        <li data-id="${product.id}">
+          ${product.title} - $${product.price}
+          <button onclick="deleteProduct(${product.id})">Eliminar</button>
+        </li>
+      `).join('');
+    });
+
+    // Mostrar errores
+    socket.on('error', (message) => {
+      document.getElementById('error').textContent = message;
+    });
+
+    // Manejar formulario para agregar producto
+    document.getElementById('addProductForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const product = {
+        title: document.getElementById('title').value,
+        price: Number(document.getElementById('price').value),
+        description: document.getElementById('description').value,
+        code: document.getElementById('code').value,
+        stock: Number(document.getElementById('stock').value),
+        category: document.getElementById('category').value,
+        status: document.getElementById('status').value === 'true'
+      };
+      socket.emit('addProduct', product);
+      e.target.reset();
+      document.getElementById('error').textContent = '';
+    });
+
+    // Función para eliminar producto
+    function deleteProduct(id) {
+      socket.emit('deleteProduct', id);
+    }
+  </script>
+</body>
+</html>
