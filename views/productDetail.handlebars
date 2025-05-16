@@ -1,0 +1,26 @@
+<h1>{{product.title}}</h1>
+<p>Descripción: {{product.description}}</p>
+<p>Precio: ${{product.price}}</p>
+<p>Categoría: {{product.category}}</p>
+<p>Stock: {{product.stock}}</p>
+<p>Código: {{product.code}}</p>
+<p>Disponibilidad: {{#if product.status}}Disponible{{else}}No disponible{{/if}}</p>
+<button onclick="addToCart('{{product._id}}')">Agregar al Carrito</button>
+<a href="/products">Volver</a>
+<script>
+  async function addToCart(productId) {
+    try {
+      let cartId = localStorage.getItem('cartId');
+      if (!cartId) {
+        const response = await fetch('/api/carts', { method: 'POST' });
+        const cart = await response.json();
+        cartId = cart._id;
+        localStorage.setItem('cartId', cartId);
+      }
+      await fetch(`/api/carts/${cartId}/product/${productId}`, { method: 'POST' });
+      alert('Producto agregado');
+    } catch (error) {
+      alert('Error al agregar');
+    }
+  }
+</script>

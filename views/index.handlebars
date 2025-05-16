@@ -1,0 +1,55 @@
+<h1>Lista de Productos</h1>
+{{#if payload.length}}
+  <ul>
+    {{#each payload}}
+      <li>
+        <a href="/products/{{this._id}}">{{this.title}} - ${{this.price}}</a>
+        <button onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+      </li>
+    {{/each}}
+  </ul>
+{{else}}
+  <p>No se encontraron productos.</p>
+{{/if}}
+<div>
+  {{#if hasPrevPage}}
+    <a href="{{prevLink}}">Anterior</a>
+  {{/if}}
+  <span>Página {{page}} de {{totalPages}}</span>
+  {{#if hasNextPage}}
+    <a href="{{nextLink}}">Siguiente</a>
+  {{/if}}
+</div>
+<div>
+  <a href="#" id="cartLink" style="display: none;">Ver Carrito</a>
+</div>
+<script>
+  async function addToCart(productId) {
+    try {
+      let cartId = localStorage.getItem('cartId');
+      if (!cartId) {
+        const response = await fetch('/api/carts', { method: 'POST' });
+        const cart = await response.json();
+        cartId = cart._id;
+        localStorage.setItem('cartId', cartId);
+        const cartLink = document.getElementById('cartLink');
+        cartLink.href = `/carts/${cartId}`;
+        cartLink.style.display = 'inline';
+      }
+      await fetch(`/api/carts/${cartId}/product/${productId}`, { method: 'POST' });
+      alert('Producto agregado');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Error al agregar');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const cartId = localStorage.getItem('cartId');
+    if (cartId) {
+      const cartLink = document.getElementById('cartLink');
+      cartLink.href = `/carts/${cartId}`;
+      cartLink.style.display = 'inline';
+    }
+  });
+</script>
